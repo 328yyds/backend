@@ -8,9 +8,9 @@ host = "106.ihuyi.com"
 sms_send_uri = "/webservice/sms.php?method=Submit"
 
 # 用户名是登录用户中心->验证码短信->产品总览->APIID
-account = "C79115995"
+account = "C97750958"
 # 密码 查看密码请登录用户中心->验证码短信->产品总览->APIKEY
-password = "2fdca307bc3cecc8c1d730c51c4d901e"
+password = "9faa8678b64b81983f70e5fc5d40eafd"
 
 
 def send_sms(text, tel):
@@ -28,5 +28,6 @@ def send_sms(text, tel):
 def send_code(tel):
     code = str(random.randint(100000, 999999))
     text = "您的验证码是：" + code + "。\n请不要把验证码泄露给其他人。"
+    print(tel, code)
     send_sms(text, tel)
     return code

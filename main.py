@@ -8,7 +8,6 @@ import cv2
 from starlette.templating import Jinja2Templates
 import threading
 from Msg_auth_code import *
-import db.users
 
 lock = threading.Lock()
 
@@ -64,8 +63,8 @@ def change_password(user_data: Modify_password_inf):
     return response
 
 
-@app.post("/set_name", name='设置姓名')
-def set_name(user_data: Set_user_name):
+@app.post("/set_user_name", name='设置真实姓名')
+def set_user_name_(user_data: Set_user_name):
     response = set_name(**user_data.dict())
     return response
 
