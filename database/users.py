@@ -58,7 +58,7 @@ class Root_user_db(Base_user):
     def add(username: str, tel: str, password: str, admin_code: str,
             last_login_time: datetime.date = datetime.now().date()):
         p = Root_user_db(username=username, tel=tel, password=MD5(password),
-                      admin_code=admin_code, last_login_time=last_login_time)
+                         admin_code=admin_code, last_login_time=last_login_time)
         session.add(p)
         session.commit()
 
@@ -75,7 +75,7 @@ class Normal_user_db(Base_user):
     def add(username: str, tel: str, password: str, admin_code: str,
             last_login_time: datetime.date = datetime.now().date()):
         session.add(Normal_user_db(username=username, tel=tel, password=MD5(password),
-                                last_login_time=last_login_time))
+                                   last_login_time=last_login_time))
         session.commit()
 
 
