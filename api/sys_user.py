@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from schemas.request import *
-from database.users import *
-from database.state import Login_info_db
+from database.table.users import *
+from database.table.state import Login_info_db
 from utils import Msg_auth_code
 
 router = APIRouter()

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from schemas.request import *
-from database.users import *
+from database.table.users import *
 
 router = APIRouter()
 

@@ -28,14 +28,12 @@ def get_angle(v1, v2):
 
 def get_pos(keypoints):
     height = keypoints[1][1] - keypoints[16][0]
-    # 计算左腿夹角
     v1 = keypoints[11][1] - keypoints[13][1]
-    # 计算右腿夹角
     v2 = keypoints[12][1] - keypoints[14][1]
     print(v1, v2, height)
     if abs((v1 + v2) / height) / 2 < 0.1:
-        return 'jump'
-    return 'normal'
+        return '陌生人'
+    return '正常'
 
 
 '''
@@ -106,27 +104,5 @@ def img_process(img):
     score = score / n_KeyPoints
     str_pos = ""
     if score > 0.5:
-        # 标记关键点
-        for point in keypoints:
-            cv2.circle(img, (point[0], point[1]), 5, (255, 255, 0), 5)
-        # 画关节连接线
-        # 左臂
-        cv2.polylines(img, [np.array([keypoints[5], keypoints[7], keypoints[9]])], False, (0, 255, 0), 3)
-        # # 右臂
-        cv2.polylines(img, [np.array([keypoints[6], keypoints[8], keypoints[10]])], False, (0, 0, 255), 3)
-        # # 左腿
-        cv2.polylines(img, [np.array([keypoints[11], keypoints[13], keypoints[15]])], False, (0, 255, 0), 3)
-        # # 右腿
-        cv2.polylines(img, [np.array([keypoints[12], keypoints[14], keypoints[16]])], False, (0, 255, 255), 3)
-        # 身体部分
-        cv2.polylines(img, [np.array([keypoints[5], keypoints[6], keypoints[12], keypoints[11], keypoints[5]])],
-                      False, (255, 255, 0), 3)
-        # 计算位置角
         str_pos = get_pos(keypoints)
     return str_pos
-    # 显示动作识别结果
-    # img = paint_chinese_opencv(img, str_pos, (0, 5), (255, 0, 0))
-    # cv2.imwrite('Pos.jpg', img)
-
-
-# img_process(cv2.imread('a.jpg'))
