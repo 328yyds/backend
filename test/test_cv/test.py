@@ -1,5 +1,8 @@
 import cv2
+from PIL import Image
+from alg.behaviour_detect import *
 
-cap = cv2.VideoCapture('../test_video/test_video_1.mp4')
-_, img = cap.read()
-print(type(bytearray(cv2.imencode('.png', img)[1])))
+img = cv2.imread('../../alg/behaviour_detect/a.jpg')
+img = cv2.putText(img, "hello world!", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
+img = cv2.putText(img, "hello world!", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
+cv2.imwrite('a.jpg', img)

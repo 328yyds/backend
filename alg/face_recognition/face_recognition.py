@@ -4,7 +4,6 @@ import cv2  # 图像处理的库 OpenCv
 import pandas as pd  # 数据处理的库 Pandas
 import xlrd
 import os
-from cv2 import imread, IMREAD_COLOR
 
 
 class Reco:
@@ -12,7 +11,10 @@ class Reco:
     facerec = dlib.face_recognition_model_v1(d + "/data/data_dlib/dlib_face_recognition_resnet_model_v1.dat")
     faceList = []
 
-    def if_face_in_db(self, img_path):
+    def __init__(self):
+        pass
+
+    def face_recognition(self, img_rd):
         # 处理存放所有人脸特征的 csv
         path_features_known_csv = self.d + "/data/features_all.csv"
         csv_rd = pd.read_csv(path_features_known_csv, header=None)
@@ -38,8 +40,6 @@ class Reco:
         path = self.d + '/person.xlsx'
 
         self.get_person(path)
-
-        img_rd = imread(img_path, IMREAD_COLOR)
 
         # 取灰度
         img_gray = cv2.cvtColor(img_rd, cv2.COLOR_RGB2GRAY)
@@ -82,7 +82,6 @@ class Reco:
                         label1 = str(self.personList[i][1]) + str(self.personList[i][2])
                         name_namelist[k] = label1
                         return True
-
         return False
 
     # 计算两个128D向量间的欧式距离
@@ -115,5 +114,6 @@ class Reco:
         return self.personList
 
 
-def face_recognition(img_path):
-    Reco.if_face_in_db(img_path)
+def face_recognition(img_rd):
+    recognition = Reco()
+    return recognition.face_recognition(img_rd)

@@ -27,13 +27,12 @@ def get_angle(v1, v2):
 
 
 def get_pos(keypoints):
-    height = keypoints[1][1] - keypoints[16][0]
+    height = keypoints[1][1] - keypoints[16][1]
     v1 = keypoints[11][1] - keypoints[13][1]
     v2 = keypoints[12][1] - keypoints[14][1]
-    print(v1, v2, height)
     if abs((v1 + v2) / height) / 2 < 0.1:
-        return '陌生人'
-    return '正常'
+        return 'jump'
+    return 'walk'
 
 
 '''

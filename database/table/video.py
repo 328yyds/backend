@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Date, Integer
+from sqlalchemy import Column, String, Integer
 from database.config import base, session, engine
 
 
@@ -15,6 +15,20 @@ class Test_video(base):
     @staticmethod
     def add(name: str, path: str):
         session.add(Test_video(name, path))
+        session.commit()
+
+
+class Vidicon(base):
+    __tablename__ = 'vidicon'
+    No = Column(Integer, primary_key=True, autoincrement=True)
+    ip = Column(String)
+
+    def __init__(self, ip):
+        self.ip = ip
+
+    @staticmethod
+    def add(ip: str):
+        session.add(Vidicon(ip))
         session.commit()
 
 
