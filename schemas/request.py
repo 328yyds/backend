@@ -53,6 +53,8 @@ class Modify_password_inf(Base_info):
     password: 新密码
     username: 用户名
     """
+    usertype: str
+    username: str
     password: str
 
 
@@ -69,3 +71,16 @@ class Set_user_name(BaseModel):
     usertype: str
     username: str
     name: str
+
+
+class Delete_user_info(BaseModel):
+    username: str
+
+
+class Set_admin_info(BaseModel):
+    username: str
+
+
+class User_head(BaseModel):
+    img_base64: str
+    username: str

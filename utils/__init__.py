@@ -1,0 +1,2 @@
+def general():
+    return None

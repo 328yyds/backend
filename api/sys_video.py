@@ -1,51 +1,19 @@
+import cv2
+import requests
 from fastapi import APIRouter
 from starlette.responses import StreamingResponse
-from alg.behaviour_detect.tf_pose_estimation import img_process
 from database.table.video import *
-from database.table.state import Alarm_info_db
-from alg.face_recognition.record_face import *
-from alg.face_recognition.get_features import *
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from alg.detect_area.detect_area import *
+from alg.behaviour_detect.behaviour_detect import detect_behaviour
+
+import torch
+
+if torch.cuda.is_available():
+    torch.cuda.get_device_properties(0)
 
 router = APIRouter()
-
 COUNT = 0
-
-
-def getImg(video_ip):
-    """
-    获取在线视频流
-    :param video_ip: 摄像头IP地址
-    :return:
-    """
-    cap = cv2.VideoCapture(video_ip)
-    global COUNT
-    while True:
-        ret, image_np = cap.read()
-        COUNT += 1
-        if COUNT == 10:
-            COUNT = 0
-            # 检测是否翻越栅栏
-            str_ = img_process(image_np)
-            is_normal = face_recognition(image_np)
-            print(is_normal)
-            if str_ == 'jump':
-                image_np = cv2.putText(image_np, "检测到翻越", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
-                # 检测人脸，如果数据库里面有
-                is_normal = face_recognition(image_np)
-                if is_normal:
-                    # 存入数据库，不发报警信息
-                    Alarm_info_db.add("normal-invader", bytearray(cv2.imencode('.jpg', image_np)[1]))
-                    continue
-                else:  # 如果数据库里面没有这张脸
-                    # 存入数据库，发送报警信息
-                    image_np = cv2.putText(image_np, "陌生人入侵", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
-                    Alarm_info_db.add("invader", bytearray(cv2.imencode('.jpg', image_np)[1]))
-            elif str == 'walk':
-                Alarm_info_db.add("normal", bytearray(cv2.imencode('.jpg', image_np)[1]))
-        if image_np is None:
-            cap = cv2.VideoCapture(video_ip)
-            continue
-        yield img2byte(image_np)
 
 
 def img2byte(img):
@@ -53,24 +21,72 @@ def img2byte(img):
             bytearray(cv2.imencode('.png', img)[1]) + b'\r\n')
 
 
-@router.get('/video/{ip}', name='实时传输视频')
+@router.get('/video_area/{ip}', name='实时传输视频: 检测区域')
 def send_video(ip):
-    return StreamingResponse(getImg('http://admin:admin@' + ip + ':8081/video'),
-                             media_type='multipart/x-mixed-replace;boundary=frame')
+    data = str(ip).split(':')
+    return StreamingResponse(
+        get_img_detect_area('http://admin:admin@' + data[0] + ':8081/video', int(data[1].split('=')[1]),
+                            int(data[2].split('=')[1]), int(data[3].split('=')[1]), int(data[4].split('=')[1])),
+        media_type='multipart/x-mixed-replace;boundary=frame')
+
+
+@router.get('/video_behaviour/{ip}', name='实时传输视频: 检测人物动作')
+def send_video(ip):
+    return StreamingResponse(
+        detect_behaviour('http://admin:admin@' + ip + ':8081/video'),
+        media_type='multipart/x-mixed-replace;boundary=frame')
 
 
 @router.get('/video_judge/{ip}', name='判断摄像头ip是否合法')
 def judge(ip):
-    return cv2.VideoCapture('http://admin:admin@' + ip + ':8081/video').isOpened()
+    size = len(session.query(Vidicon).filter_by(ip=ip).all())
+    if size > 0:
+        return cv2.VideoCapture('http://admin:admin@' + ip + ':8081/video').isOpened()
+    else:
+        return "not register"
 
 
-#
-# @router.get('/')
-# def f(request: Request):
-#     return templates.TemplateResponse('index.html', {'request': request})
+def get_test_video1(num):
+    path = session.query(Test_video).filter_by(name='video_' + str(num)).first()
+    if path is None:
+        return None
+    path = path.path
+    cap = cv2.VideoCapture(path)
+    success, frame = cap.read()
+    while success:
+        yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
+               bytearray(cv2.imencode('.png', frame)[1]) + b'\r\n')
+        success, frame = cap.read()
 
 
 @router.get('/test_video/{num}', name='发送测试视频')
 def get_test_video(num):
-    path = session.query(Test_video).filter_by(name='test_video' + str(num))
-    return StreamingResponse(getImg(path), media_type='multipart/x-mixed-replace;boundary=frame')
+    return StreamingResponse(get_test_video1(num), media_type='multipart/x-mixed-replace;boundary=frame')
+
+
+@router.get('/register_video/{ip}', name='注册摄像头')
+def register_video(ip):
+    data = session.query(Vidicon).filter_by(ip=ip).all()
+    if len(data) > 0:
+        return False, '该摄像头已存在'
+    is_available = cv2.VideoCapture('http://admin:admin@' + ip + ':8081/video').isOpened()
+    if is_available:
+        Vidicon.add(ip)
+        return True, '摄像头注册成功'
+    return False, '该摄像头无法访问'
+
+
+@router.get('/search_available_ip', name='查找当前可用ip')
+def search_available_ip():
+    data = session.query(Vidicon).all()
+    response = []
+    for item in data:
+        state = []
+        try:
+            state.append(item.ip)
+            requests.get('http://admin:admin@' + item.ip + ':8081/video', timeout=0.5, stream=True)
+            state.append('available')
+        except requests.exceptions.ConnectTimeout:
+            state.append('unavailable')
+        response.append(state)
+    return response

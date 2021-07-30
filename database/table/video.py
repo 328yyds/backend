@@ -21,7 +21,7 @@ class Test_video(base):
 class Vidicon(base):
     __tablename__ = 'vidicon'
     No = Column(Integer, primary_key=True, autoincrement=True)
-    ip = Column(String)
+    ip = Column(String, unique=True)
 
     def __init__(self, ip):
         self.ip = ip

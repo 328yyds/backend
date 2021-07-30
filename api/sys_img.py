@@ -31,3 +31,20 @@ def get_invade_info():
     for item in data:
         response.append([item.invade_level, item.invade_time])
     return response
+
+
+@router.get('/invade_data_show', name='返回可视化数据')
+def get_invade_data():
+    response = []
+    data = session.query(Alarm_info_db).order_by(Alarm_info_db.invade_time).group_by(Alarm_info_db.invade_time).all()
+    data = data[-7:]
+    for item in data:
+        day_data = []
+        day_data.append(item.invade_time)
+        day_data.append(len(session.query(Alarm_info_db).filter_by(invade_time=item.invade_time).all()))
+        day_data.append(len(session.query(Alarm_info_db).filter_by(invade_time=item.invade_time, invade_level=
+                                                                   'invader').all()))
+        day_data.append(len(session.query(Alarm_info_db).filter_by(invade_time=item.invade_time, invade_level=
+                                                                   'normal').all()))
+        response.append(day_data)
+    return response
